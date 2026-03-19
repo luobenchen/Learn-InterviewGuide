@@ -1,0 +1,55 @@
+# --- Gradle 构建缓存和输出 ---
+.gradle/
+build/
+*/build/
+!*/src/main/build/      # 如果你有特殊需求，可以反向排除
+
+# --- 前端依赖和构建产物 ---
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env.local
+frontend/.env.*.local
+
+# --- IDE 配置 ---
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+
+# --- 环境变量（敏感信息）---
+.env
+.env.local
+.env.*.local
+
+# --- 日志文件 ---
+*.log
+app.log
+app_buckets.log
+build.log
+
+# --- 系统文件 ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- 编译输出文件 ---
+*.class
+*.jar
+*.war
+*.ear
+
+# --- 测试报告等 ---
+test-output/
+reports/
+
+# --- 其他临时文件 ---
+*.swp
+*.swo
+*~
+/app/bin/               # 如果 IDE 生成了二进制输出
+qodana.yaml             # 代码分析配置（可选忽略）
