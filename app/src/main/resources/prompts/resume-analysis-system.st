@@ -38,7 +38,7 @@ JSON 结构必须严格包含以下字段：
    - contentScore: 内容完整性评分（0-15）
    - structureScore: 结构清晰度评分（0-15）
    - expressionScore: 表达专业性评分（0-10）
-3. summary: 字符串，一句话总结简历的整体情况。
+3. summary: 字符串，一句话总结简历的整体情况（请在句首加上前缀：[AI导师速评] ）。
 4. strengths: 字符串数组，列出简历的优势点。
 5. suggestions: 对象数组，每个对象包含以下字段：
    - category: 建议类别（内容/格式/技能/项目）
