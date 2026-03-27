@@ -94,6 +94,7 @@ public class AnalyzeStreamConsumer extends AbstractStreamConsumer<AnalyzeStreamC
             log.warn("简历已被删除，跳过分析任务: resumeId={}", resumeId);
             return;
         }
+        log.info("🎯 开始执行核心链路：AI简历分析 [首次代码修改点] - resumeId={}", resumeId);
 
         ResumeAnalysisResponse analysis = gradingService.analyzeResume(payload.content());
         ResumeEntity resume = resumeRepository.findById(resumeId).orElse(null);
