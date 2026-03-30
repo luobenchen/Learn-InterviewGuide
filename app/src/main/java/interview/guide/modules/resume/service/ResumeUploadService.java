@@ -15,8 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 简历上传服务
@@ -94,6 +97,45 @@ public class ResumeUploadService {
             ),
             "duplicate", false
         );
+    }
+
+    /**
+     * 【新增功能】批量上传并分析单人简历（每个文件一份简历）
+     * 即功能2的①：上传多个可被分析的简历文件，其中每个简历文件中只有一个面试者信息
+     *
+     * @param files 多个简历文件列表
+     * @return 批量处理的结果列表
+     */
+    public List<Map<String, Object>> batchUploadAndAnalyze(List<org.springframework.web.multipart.MultipartFile> files) {
+        if (files == null || files.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 使用 CompletableFuture 实现高阶多线程并发，极大地提升批量处理速度
+        List<CompletableFuture<Map<String, Object>>> futures = files.stream()
+            .map(file -> CompletableFuture.supplyAsync(() -> {
+                String fileName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "未知文件";
+                try {
+                    // 复用单文件的逻辑：安保校验 -> 解析文档 -> 哈希去重 -> 存库 -> 推送Redis
+                    return uploadAndAnalyze(file);
+                } catch (Exception e) {
+                    // 局部容错机制：某一个文件失败不影响其他线程并行执行
+                    log.error("批量上传时遇到错误文件 - 跳过该文件: {}", fileName, e);
+                    
+                    // 强制指定返回类型，以匹配 Map<String, Object> 的泛型要求
+                    return Map.<String, Object>of(
+                        "filename", fileName,
+                        "status", AsyncTaskStatus.FAILED.name(),
+                        "error", e.getMessage() != null ? e.getMessage() : "未知错误"
+                    );
+                }
+            }))
+            .toList();
+
+        // 阻塞主线程，等待所有并发任务完成，并将结果收集成列表
+        return futures.stream()
+            .map(CompletableFuture::join)
+            .toList();
     }
 
     /**

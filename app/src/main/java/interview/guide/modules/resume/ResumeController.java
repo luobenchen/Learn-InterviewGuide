@@ -51,6 +51,25 @@ public class ResumeController {
     }
 
     /**
+     * 【新增接口】批量上传简历并自动触发异步分析
+     * 解决多个独立候选人简历的同时投递，适用于 HR 批量建档场景
+     *
+     * @param files 上传的简历附件数组（使用 files 原名）
+     * @return 包含着分别状态（存库成功或格式报错）的结果列表
+     */
+    @PostMapping(value = "/api/resumes/batch-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RateLimit(dimensions = {RateLimit.Dimension.GLOBAL, RateLimit.Dimension.IP}, count = 5)
+    public Result<List<Map<String, Object>>> batchUploadAndAnalyze(@RequestParam("files") List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) {
+            return Result.success(List.of()); // 如果什么也没传，直接返回空列表
+        }
+        log.info("收到批量简历上传请求，总文件数: {}", files.size());
+        
+        List<Map<String, Object>> results = uploadService.batchUploadAndAnalyze(files);
+        return Result.success(results);
+    }
+
+    /**
      * 获取所有简历列表
      */
     @GetMapping("/api/resumes")
