@@ -52,7 +52,7 @@ export default function FileUploadCard({
   onUpload,
   onBack,
 }: FileUploadCardProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [name, setName] = useState('');
 
@@ -71,32 +71,32 @@ export default function FileUploadCard({
     setDragOver(false);
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      setSelectedFile(files[0]); // 显示第一个文件的名称
-      // 为了支持多文件，如果外部组件支持多文件回调，我们最好传递文件列表
-      // 但这里我们简单点，利用 input[multiple] 和扩展 onFileSelect，我们先传递所有 files
+      const fileArr = Array.from(files);
+      setSelectedFiles(fileArr); // 显示所有文件
       // @ts-ignore
-      onFileSelect?.(files);
+      onFileSelect?.(fileArr);
     }
   }, [onFileSelect]);
 
   const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      setSelectedFile(files[0]); // 界面暂时显示第一个
+      const fileArr = Array.from(files);
+      setSelectedFiles(fileArr);
       // @ts-ignore
-      onFileSelect?.(files);
+      onFileSelect?.(fileArr);
     }
   }, [onFileSelect]);
 
   // 修改 handleUpload 以支持传递 FileList 或者 File[]
   const handleUpload = () => {
-    // 因为这里组件设计是单文件，我们改为通过 DOM 直接获取多文件，非常稳妥
     const fileInput = document.getElementById('file-upload-input') as HTMLInputElement;
     if (fileInput && fileInput.files && fileInput.files.length > 0) {
         // @ts-ignore 
         onUpload(Array.from(fileInput.files), name.trim() || undefined);
-    } else if (selectedFile) {
-        onUpload(selectedFile as any, name.trim() || undefined);
+    } else if (selectedFiles.length > 0) {
+        // @ts-ignore 
+        onUpload(selectedFiles, name.trim() || undefined);
     }
   };
 
@@ -165,7 +165,7 @@ export default function FileUploadCard({
 
         <div className="text-center">
           <AnimatePresence mode="wait">
-            {selectedFile ? (
+            {selectedFiles.length > 0 ? (
               <motion.div
                 key="file-selected"
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -177,21 +177,29 @@ export default function FileUploadCard({
                     className="w-20 h-20 mx-auto bg-primary-100 dark:bg-primary-900/50 rounded-full flex items-center justify-center">
                   <FileText className="w-10 h-10 text-primary-600 dark:text-primary-400"/>
                 </div>
-                <div
-                    className="flex items-center justify-center gap-4 bg-slate-50 dark:bg-slate-700/50 px-6 py-4 rounded-xl max-w-md mx-auto">
-                  <div className="text-left flex-1 min-w-0">
-                    <p className="font-semibold text-slate-900 dark:text-white truncate">{selectedFile.name}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{formatFileSize(selectedFile.size)}</p>
-                  </div>
-                  <button
-                      className="w-8 h-8 bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/70 transition-colors flex items-center justify-center"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedFile(null);
-                    }}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                <div className="space-y-2 max-h-48 overflow-y-auto max-w-md mx-auto">
+                  {selectedFiles.map((f, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between gap-4 bg-slate-50 dark:bg-slate-700/50 px-6 py-4 rounded-xl"
+                    >
+                      <div className="text-left flex-1 min-w-0">
+                        <p className="font-semibold text-slate-900 dark:text-white truncate">{f.name}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{formatFileSize(f.size)}</p>
+                      </div>
+                      <button
+                        className="w-8 h-8 bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/70 transition-colors flex items-center justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newFiles = [...selectedFiles];
+                          newFiles.splice(i, 1);
+                          setSelectedFiles(newFiles);
+                        }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
             ) : (
@@ -233,7 +241,7 @@ export default function FileUploadCard({
       </motion.div>
 
       {/* 名称输入框 */}
-      {showNameInput && selectedFile && (
+      {showNameInput && selectedFiles.length > 0 && (
         <motion.div
             className="mt-6 bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg dark:shadow-slate-900/50"
           initial={{ opacity: 0, y: 20 }}
@@ -279,7 +287,7 @@ export default function FileUploadCard({
             返回
           </motion.button>
         )}
-        {selectedFile && (
+        {selectedFiles.length > 0 && (
           <motion.button
             onClick={handleUpload}
             disabled={uploading}
