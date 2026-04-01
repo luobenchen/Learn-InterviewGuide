@@ -12,6 +12,17 @@ export const resumeApi = {
   },
 
   /**
+   * 批量上传简历文件（新增接口）
+   */
+  async batchUploadAndAnalyze(files: File[]): Promise<any> {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file); // 必须是 files，后端 @RequestParam("files")
+    });
+    return request.upload<any>('/api/resumes/batch-upload', formData);
+  },
+
+  /**
    * 健康检查
    */
   async healthCheck(): Promise<{ status: string; service: string }> {

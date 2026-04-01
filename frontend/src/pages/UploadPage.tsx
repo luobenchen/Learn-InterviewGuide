@@ -11,20 +11,35 @@ export default function UploadPage({ onUploadComplete }: UploadPageProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleUpload = async (file: File) => {
+  // 支持接受单文件或是多文件数组
+  const handleUpload = async (fileOrFiles: unknown) => {
     setUploading(true);
     setError('');
 
     try {
-      const data = await resumeApi.uploadAndAnalyze(file);
+      if (Array.isArray(fileOrFiles) && fileOrFiles.length > 0) {
+        // 调用新的并发批量接口
+        const files = fileOrFiles as File[];
+        const dataArr = await resumeApi.batchUploadAndAnalyze(files);
+        
+        // 简单处理：如果有成的，跳到第一个成功的简历去
+        const successItem = dataArr.find((item: any) => item.status !== 'FAILED');
+        if (successItem && successItem.storage && successItem.storage.resumeId) {
+            onUploadComplete(successItem.storage.resumeId);
+            return;
+        }
+        throw new Error(dataArr[0]?.error || '批量全部上传失败，请重试');
 
-      // 异步模式：只检查上传是否成功（storage 信息）
-      if (!data.storage || !data.storage.resumeId) {
-        throw new Error('上传失败，请重试');
+      } else {
+        // 老的单文件逻辑
+        const file = fileOrFiles as File;
+        const data = await resumeApi.uploadAndAnalyze(file);
+
+        if (!data.storage || !data.storage.resumeId) {
+          throw new Error('上传失败，请重试');
+        }
+        onUploadComplete(data.storage.resumeId);
       }
-
-      // 上传成功，跳转到简历库（分析在后台进行）
-      onUploadComplete(data.storage.resumeId);
     } catch (err) {
       setError(getErrorMessage(err));
       setUploading(false);

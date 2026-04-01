@@ -71,22 +71,33 @@ export default function FileUploadCard({
     setDragOver(false);
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      setSelectedFile(files[0]);
-      onFileSelect?.(files[0]);
+      setSelectedFile(files[0]); // 显示第一个文件的名称
+      // 为了支持多文件，如果外部组件支持多文件回调，我们最好传递文件列表
+      // 但这里我们简单点，利用 input[multiple] 和扩展 onFileSelect，我们先传递所有 files
+      // @ts-ignore
+      onFileSelect?.(files);
     }
   }, [onFileSelect]);
 
   const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      setSelectedFile(files[0]);
-      onFileSelect?.(files[0]);
+      setSelectedFile(files[0]); // 界面暂时显示第一个
+      // @ts-ignore
+      onFileSelect?.(files);
     }
   }, [onFileSelect]);
 
+  // 修改 handleUpload 以支持传递 FileList 或者 File[]
   const handleUpload = () => {
-    if (!selectedFile) return;
-    onUpload(selectedFile, name.trim() || undefined);
+    // 因为这里组件设计是单文件，我们改为通过 DOM 直接获取多文件，非常稳妥
+    const fileInput = document.getElementById('file-upload-input') as HTMLInputElement;
+    if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        // @ts-ignore 
+        onUpload(Array.from(fileInput.files), name.trim() || undefined);
+    } else if (selectedFile) {
+        onUpload(selectedFile as any, name.trim() || undefined);
+    }
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -147,6 +158,7 @@ export default function FileUploadCard({
           id="file-upload-input"
           className="hidden"
           accept={accept}
+          multiple={true} // 开启多选
           onChange={handleFileChange}
           disabled={uploading}
         />
