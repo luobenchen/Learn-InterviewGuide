@@ -18,7 +18,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:interview_guide}
     username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:123456}
+    password: ${POSTGRES_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
 
   jpa:

@@ -90,11 +90,8 @@ export default function FileUploadCard({
 
   // 修改 handleUpload 以支持传递 FileList 或者 File[]
   const handleUpload = () => {
-    const fileInput = document.getElementById('file-upload-input') as HTMLInputElement;
-    if (fileInput && fileInput.files && fileInput.files.length > 0) {
-        // @ts-ignore 
-        onUpload(Array.from(fileInput.files), name.trim() || undefined);
-    } else if (selectedFiles.length > 0) {
+    if (selectedFiles.length > 0) {
+        // 直接使用通过 React 状态维护好的数组（支持了从拖拽或选择窗口拿到的多文件）
         // @ts-ignore 
         onUpload(selectedFiles, name.trim() || undefined);
     }
