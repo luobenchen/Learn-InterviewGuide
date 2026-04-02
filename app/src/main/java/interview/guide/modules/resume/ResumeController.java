@@ -58,7 +58,7 @@ public class ResumeController {
      * @return 包含着分别状态（存库成功或格式报错）的结果列表
      */
     @PostMapping(value = "/api/resumes/batch-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @RateLimit(dimensions = {RateLimit.Dimension.GLOBAL, RateLimit.Dimension.IP}, count = 5)
+    @RateLimit(dimensions = {RateLimit.Dimension.GLOBAL, RateLimit.Dimension.IP}, count = 20)
     public Result<List<Map<String, Object>>> batchUploadAndAnalyze(@RequestParam("files") List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
             return Result.success(List.of()); // 如果什么也没传，直接返回空列表

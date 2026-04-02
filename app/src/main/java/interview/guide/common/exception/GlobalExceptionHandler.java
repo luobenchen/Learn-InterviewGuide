@@ -36,6 +36,16 @@ public class GlobalExceptionHandler {
     }
     
     /**
+     * 处理限流异常
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public Result<Void> handleRateLimitExceededException(RateLimitExceededException e) {
+        log.warn("接口限流: {}", e.getMessage());
+        return Result.error(ErrorCode.TOO_MANY_REQUESTS.getCode(), "系统繁忙，请稍后重试（触发限流）");
+    }
+    
+    /**
      * 处理参数校验异常
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
