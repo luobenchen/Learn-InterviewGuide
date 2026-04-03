@@ -13,7 +13,7 @@
 
 
 ---
-
+[原项目仓库](https://github.com/Snailclimb/interview-guide)
 ## 项目介绍
 
 InterviewGuide 是一个集成了简历分析、模拟面试和知识库管理的智能面试辅助平台。系统利用大语言模型（LLM）和向量数据库技术，为求职者和 HR 提供智能化的简历评估和面试练习服务。
