@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -42,7 +43,23 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.OK)
     public Result<Void> handleRateLimitExceededException(RateLimitExceededException e) {
         log.warn("接口限流: {}", e.getMessage());
-        return Result.error(ErrorCode.TOO_MANY_REQUESTS.getCode(), "系统繁忙，请稍后重试（触发限流）");
+        return Result.error(ErrorCode.TOO_MANY_REQUESTS, ErrorCode.TOO_MANY_REQUESTS.getMessage());
+    }
+
+    /**
+     * 处理请求方法不支持异常（例如把仅支持 GET 的接口用 POST 调用）
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public Result<Void> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        String method = e.getMethod() != null ? e.getMethod() : "UNKNOWN";
+        String supported = e.getSupportedHttpMethods() != null
+            ? e.getSupportedHttpMethods().stream().map(org.springframework.http.HttpMethod::name).collect(Collectors.joining(", "))
+                : "UNKNOWN";
+
+        log.warn("请求方法不支持: method={}, supported={}", method, supported);
+        return Result.error(ErrorCode.METHOD_NOT_ALLOWED,
+                String.format("请求方法不支持：当前为 %s，支持 %s", method, supported));
     }
     
     /**

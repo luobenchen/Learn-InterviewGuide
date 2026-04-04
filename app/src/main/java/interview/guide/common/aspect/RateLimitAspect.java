@@ -270,7 +270,7 @@ public class RateLimitAspect {
     /**
      * 获取当前用户 ID
      * 从请求属性或 Session 中获取
-     * TODO: 需要根据实际项目的认证框架进行实现，本项目未显示用户管理
+     * todo:需要根据实际项目的认证框架进行实现，本项目未显示用户管理
      */
     private String getCurrentUserId() {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
